@@ -15,8 +15,8 @@ static constexpr int TILE_WIDTH  = 32;
 static constexpr int TILE_MARGIN1 = 4;
 static constexpr int TILE_MARGIN2 = 8;
 
-static constexpr int WINDOW_HEIGHT = BOARD_HEIGHT * TILE_WIDTH;
-static constexpr int WINDOW_WIDTH  = BOARD_WIDTH  * TILE_WIDTH;
+static constexpr int WINDOW_HEIGHT = (BOARD_HEIGHT+2) * TILE_WIDTH;
+static constexpr int WINDOW_WIDTH  = (BOARD_WIDTH+2)  * TILE_WIDTH;
 
 enum class Color
 {
@@ -28,6 +28,7 @@ enum class Color
   GREEN,
   PURPLE,
   RED,
+  GREY,
 };
 
 using Tetromino = Color[TETROMINO_WIDTH][TETROMINO_WIDTH];
@@ -234,6 +235,7 @@ void render_single_at(SDL_Renderer *renderer, size_t x, size_t y, Color color)
     case Color::GREEN:      std::tie(r1, g1, b1) = std::make_tuple(30, 200, 30);  break;
     case Color::PURPLE:     std::tie(r1, g1, b1) = std::make_tuple(180, 40, 180); break;
     case Color::RED:        std::tie(r1, g1, b1) = std::make_tuple(200, 30, 30);  break;
+    case Color::GREY:       std::tie(r1, g1, b1) = std::make_tuple(100, 100, 100);  break;
     default:
       assert(false && "Unreachable");
     }
@@ -265,14 +267,20 @@ void render_single_at(SDL_Renderer *renderer, size_t x, size_t y, Color color)
 
 void render(SDL_Renderer *renderer)
 {
-  for(size_t y=0; y<BOARD_HEIGHT; ++y)
-    for(size_t x=0; x<BOARD_WIDTH; ++x)
-      render_single_at(renderer, x, y, board[y][x]);
+  for(int y=0; y<BOARD_HEIGHT+2; ++y)
+    for(int x=0; x<BOARD_WIDTH+2; ++x)
+    {
+      Color color = (x == 0 || y == 0 || x == BOARD_WIDTH+1 || y == BOARD_HEIGHT+1)
+        ? Color::GREY
+        : board[y-1][x-1];
+
+      render_single_at(renderer, x, y, color);
+    }
 
   if(current_state == State::RUNNING)
-    for(size_t y=0; y<TETROMINO_WIDTH; ++y)
-      for(size_t x=0; x<TETROMINO_WIDTH; ++x)
-        render_single_at(renderer, current_x + x, current_y + y, current_tetromino[y][x]);
+    for(int y=0; y<TETROMINO_WIDTH; ++y)
+      for(int x=0; x<TETROMINO_WIDTH; ++x)
+        render_single_at(renderer, current_x + x + 1, current_y + y + 1, current_tetromino[y][x]);
 }
 
 int main()
